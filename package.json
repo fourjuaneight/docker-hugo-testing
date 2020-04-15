@@ -1,0 +1,18 @@
+{
+  "name": "docker-hugo-testing",
+  "version": "1.0.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/fourjuaneight/docker-hugo-testing.git"
+  },
+  "author": "Juan Villela",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/fourjuaneight/docker-hugo-testing/issues"
+  },
+  "homepage": "https://github.com/fourjuaneight/docker-hugo-testing#readme",
+  "devDependencies": {
+    "postcss-cli": "^6.0.0",
+    "postcss-preset-env": "^6.6.0"
+  }
+}
