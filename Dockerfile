@@ -1,21 +1,24 @@
 # Base docker image
-FROM debian:buster-slim
+FROM ubuntu:latest
 
 LABEL description="Docker container for building websites with the Hugo static site generator and E2E testing."
 LABEL maintainer="Juan Villela <https://www.juanvillela.dev>"
 
-# Config
-ENV GLIBC_VER=2.27-r0
-
 # Install deps + add Chrome Stable + purge all the things
 RUN apt-get update && apt-get install -y \
   apt-transport-https \
+  build-essential \
   ca-certificates \
   curl \
   gnupg \
   git-all \
   openssh-client \
   libstdc++6 \
+  unzip \
+  wget \
+  --no-install-recommends \
+  && curl -sL https://deb.nodesource.com/setup_12.16.0 | bash - \
+  && apt-get update && apt-get install -y \
   nodejs \
   npm \
   --no-install-recommends \
@@ -57,8 +60,9 @@ RUN groupadd -r chrome && useradd -r -g chrome -G audio,video chrome \
 # Run Chrome non-privileged
 USER chrome
 
-# Expose port 9222
+# Expose ports
 EXPOSE 9222
+EXPOSE 1313
 
 # Autorun chrome headless with no GPU
 ENTRYPOINT [ "google-chrome" ]
