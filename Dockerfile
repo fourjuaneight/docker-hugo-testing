@@ -8,7 +8,6 @@ LABEL maintainer="Juan Villela <https://www.juanvillela.dev>"
 ENV GLIBC_VER=2.27-r0
 
 # Build dependencies
-RUN apk update && apk upgrade
 RUN echo "http://dl-cdn.alpinelinux.org/alpine/edge/main" > /etc/apk/repositories \
   && echo "http://dl-cdn.alpinelinux.org/alpine/edge/community" >> /etc/apk/repositories \
   && echo "http://dl-cdn.alpinelinux.org/alpine/edge/testing" >> /etc/apk/repositories \
@@ -30,20 +29,6 @@ RUN echo "http://dl-cdn.alpinelinux.org/alpine/edge/main" > /etc/apk/repositorie
   ttf-freefont \
   && rm -rf /var/cache/* \
   && mkdir /var/cache/apk
-
-# Add Chrome as a user
-RUN mkdir -p /usr/src/app \
-  && adduser -D chrome \
-  && chown -R chrome:chrome /usr/src/app
-# Run Chrome as non-privileged
-USER chrome
-WORKDIR /usr/src/app
-
-ENV CHROME_BIN=/usr/bin/chromium-browser \
-  CHROME_PATH=/usr/lib/chromium/
-
-# Autorun chrome headless with no GPU
-ENTRYPOINT ["chromium-browser", "--headless", "--disable-gpu", "--disable-software-rasterizer", "--disable-dev-shm-usage"]
 
 # Install npm dependencies
 # A wildcard is used to ensure both package.json AND package-lock.json are copied where available
@@ -69,6 +54,20 @@ RUN TAG_LATEST_URL="$(curl -LsI -o /dev/null -w %{url_effective} https://github.
   && echo ${HUGO_VERSION} \
   && wget -qO- "https://github.com/gohugoio/hugo/releases/download/v${HUGO_VERSION}/hugo_extended_${HUGO_VERSION}_Linux-64bit.tar.gz" | tar xz \
   && mv hugo /usr/local/bin/hugo \
-  && chmod +x /usr/local/bin/hugo
+  && chmod +x /usr/local/bin/hugo \
+  && hugo version
 
-RUN hugo version
+# Add Chrome as a user
+RUN mkdir -p /usr/src/app \
+  && adduser -D chrome \
+  && chown -R chrome:chrome /usr/src/app
+
+# Run Chrome as non-privileged
+USER chrome
+WORKDIR /usr/src/app
+
+ENV CHROME_BIN=/usr/bin/chromium-browser \
+  CHROME_PATH=/usr/lib/chromium/
+
+# Autorun chrome headless with no GPU
+ENTRYPOINT ["chromium-browser", "--headless", "--disable-gpu", "--disable-software-rasterizer", "--disable-dev-shm-usage"]
