@@ -4,9 +4,6 @@ FROM alpine:latest
 LABEL description="Docker container for building websites with the Hugo static site generator and PostCSS."
 LABEL maintainer="Juan Villela <https://www.juanvillela.dev>"
 
-# Config
-ENV GLIBC_VER=2.27-r0
-
 # Build dependencies
 RUN echo "http://dl-cdn.alpinelinux.org/alpine/edge/main" > /etc/apk/repositories \
   && echo "http://dl-cdn.alpinelinux.org/alpine/edge/community" >> /etc/apk/repositories \
@@ -57,17 +54,11 @@ RUN TAG_LATEST_URL="$(curl -LsI -o /dev/null -w %{url_effective} https://github.
   && chmod +x /usr/local/bin/hugo \
   && hugo version
 
-# Add Chrome as a user
-RUN mkdir -p /usr/src/app \
-  && adduser -D chrome \
-  && chown -R chrome:chrome /usr/src/app
-
-# Run Chrome as non-privileged
-USER chrome
-WORKDIR /usr/src/app
-
-ENV CHROME_BIN=/usr/bin/chromium-browser \
-  CHROME_PATH=/usr/lib/chromium/
+# Config
+ENV GLIBC_VER=2.27-r0 \
+  CHROME_BIN=/usr/bin/chromium-browser \
+  CHROME_PATH=/usr/lib/chromium/ \
+  LIGHTHOUSE_CHROMIUM_PATH=/usr/bin/chromium-browser
 
 # Autorun chrome headless with no GPU
 ENTRYPOINT ["chromium-browser", "--headless", "--disable-gpu", "--disable-software-rasterizer", "--disable-dev-shm-usage"]
