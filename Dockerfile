@@ -59,16 +59,8 @@ RUN TAG_LATEST_URL="$(curl -LsI -o /dev/null -w %{url_effective} https://github.
 
 # Chrome setup
 ENV CHROME_BIN=/usr/bin/chromium-browser \
-  CHROME_PATH=/usr/lib/chromium \
+  CHROME_PATH=/usr/bin/chromium \
   LIGHTHOUSE_CHROMIUM_PATH=/usr/bin/chromium-browser
-
-# Add a chrome user and setup home dir.
-RUN groupadd --system chrome && \
-  useradd --system --create-home --gid chrome --groups audio,video chrome && \
-  mkdir --parents /home/chrome/reports && \
-  chown --recursive chrome:chrome /home/chrome
-
-USER chrome
 
 # Disable Lighthouse error reporting to prevent prompt.
 ENV CI=true
