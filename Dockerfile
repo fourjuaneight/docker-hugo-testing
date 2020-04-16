@@ -1,47 +1,65 @@
-# Base docker image
-FROM ubuntu:latest
+# Use Alpine Linux as our base image so that we minimize the overall size our final container, and minimize the surface area of packages that could be out of date.
+FROM alpine:latest
 
-LABEL description="Docker container for building websites with the Hugo static site generator and E2E testing."
+LABEL description="Docker container for building websites with the Hugo static site generator and PostCSS."
 LABEL maintainer="Juan Villela <https://www.juanvillela.dev>"
 
-# Install deps + add Chrome Stable + purge all the things
-RUN apt-get update && apt-get install -y \
-  apt-transport-https \
-  build-essential \
+# Config
+ENV GLIBC_VER=2.27-r0
+
+# Build dependencies
+RUN apk update && apk upgrade
+RUN echo "http://dl-cdn.alpinelinux.org/alpine/edge/main" > /etc/apk/repositories \
+  && echo "http://dl-cdn.alpinelinux.org/alpine/edge/community" >> /etc/apk/repositories \
+  && echo "http://dl-cdn.alpinelinux.org/alpine/edge/testing" >> /etc/apk/repositories \
+  && echo "http://dl-cdn.alpinelinux.org/alpine/v3.11/main" >> /etc/apk/repositories \
+  apk add --update --no-cache \
+  bash \
   ca-certificates \
+  chromium \
   curl \
-  gnupg \
-  git-all \
-  openssh-client \
-  libstdc++6 \
-  unzip \
-  wget \
-  --no-install-recommends \
-  && curl -sL https://deb.nodesource.com/setup_12.16.0 | bash - \
-  && apt-get update && apt-get install -y \
-  nodejs \
+  freetype \
+  git \
+  harfbuzz \
+  libstdc++ \
+  nodejs-lts \
   npm \
-  --no-install-recommends \
-  && curl -sSL https://dl.google.com/linux/linux_signing_key.pub | apt-key add - \
-  && echo "deb https://dl.google.com/linux/chrome/deb/ stable main" > /etc/apt/sources.list.d/google-chrome.list \
-  && apt-get update && apt-get install -y \
-  google-chrome-stable \
-  fontconfig \
-  fonts-ipafont-gothic \
-  fonts-wqy-zenhei \
-  fonts-thai-tlwg \
-  fonts-kacst \
-  fonts-symbola \
-  fonts-noto \
-  fonts-freefont-ttf \
-  --no-install-recommends \
-  && apt-get purge --auto-remove -y curl gnupg \
-  && rm -rf /var/lib/apt/lists/*
+  nss \
+  openssh-client \
+  ttf-freefont \
+  && rm -rf /var/cache/* \
+  && mkdir /var/cache/apk
+
+# Add Chrome as a user
+RUN mkdir -p /usr/src/app \
+  && adduser -D chrome \
+  && chown -R chrome:chrome /usr/src/app
+# Run Chrome as non-privileged
+USER chrome
+WORKDIR /usr/src/app
+
+ENV CHROME_BIN=/usr/bin/chromium-browser \
+  CHROME_PATH=/usr/lib/chromium/
+
+# Autorun chrome headless with no GPU
+ENTRYPOINT ["chromium-browser", "--headless", "--disable-gpu", "--disable-software-rasterizer", "--disable-dev-shm-usage"]
 
 # Install npm dependencies
 # A wildcard is used to ensure both package.json AND package-lock.json are copied where available
 COPY package*.json ./
 RUN npm install -g
+
+# Install glibc: This is required for HUGO-extended (including SASS) to work.
+RUN wget -q -O /etc/apk/keys/sgerrand.rsa.pub https://alpine-pkgs.sgerrand.com/sgerrand.rsa.pub \
+  && wget "https://github.com/sgerrand/alpine-pkg-glibc/releases/download/$GLIBC_VER/glibc-$GLIBC_VER.apk" \
+  && apk --no-cache add "glibc-$GLIBC_VER.apk" \
+  && rm "glibc-$GLIBC_VER.apk" \
+  && wget "https://github.com/sgerrand/alpine-pkg-glibc/releases/download/$GLIBC_VER/glibc-bin-$GLIBC_VER.apk" \
+  && apk --no-cache add "glibc-bin-$GLIBC_VER.apk" \
+  && rm "glibc-bin-$GLIBC_VER.apk" \
+  && wget "https://github.com/sgerrand/alpine-pkg-glibc/releases/download/$GLIBC_VER/glibc-i18n-$GLIBC_VER.apk" \
+  && apk --no-cache add "glibc-i18n-$GLIBC_VER.apk" \
+  && rm "glibc-i18n-$GLIBC_VER.apk"
 
 # Install HUGO
 RUN TAG_LATEST_URL="$(curl -LsI -o /dev/null -w %{url_effective} https://github.com/gohugoio/hugo/releases/latest)" \
@@ -50,20 +68,6 @@ RUN TAG_LATEST_URL="$(curl -LsI -o /dev/null -w %{url_effective} https://github.
   && echo ${HUGO_VERSION} \
   && wget -qO- "https://github.com/gohugoio/hugo/releases/download/v${HUGO_VERSION}/hugo_extended_${HUGO_VERSION}_Linux-64bit.tar.gz" | tar xz \
   && mv hugo /usr/local/bin/hugo \
-  && chmod +x /usr/local/bin/hugo \
-  && hugo version
+  && chmod +x /usr/local/bin/hugo
 
-# Add Chrome as a user
-RUN groupadd -r chrome && useradd -r -g chrome -G audio,video chrome \
-  && mkdir -p /home/chrome && chown -R chrome:chrome /home/chrome
-
-# Run Chrome non-privileged
-USER chrome
-
-# Expose ports
-EXPOSE 9222
-EXPOSE 1313
-
-# Autorun chrome headless with no GPU
-ENTRYPOINT [ "google-chrome" ]
-CMD [ "--headless", "--disable-gpu", "--remote-debugging-address=0.0.0.0", "--remote-debugging-port=9222" ]
+RUN hugo version

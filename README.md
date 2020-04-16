@@ -8,6 +8,6 @@ This image was made specifically for use on a particular type of project. It's m
 
 ## More
 
-- [Contributing](https://github.com/fourjuaneight/docker-hugo-postcss/blob/master/.github/CONTRIBUTING.md)
-- [Code of Conduct](https://github.com/fourjuaneight/docker-hugo-postcss/blob/master/CODE_OF_CONDUCT.md)
+- [Contributing](https://github.com/fourjuaneight/docker-hugo-testing/blob/master/.github/CONTRIBUTING.md)
+- [Code of Conduct](https://github.com/fourjuaneight/docker-hugo-testing/blob/master/CODE_OF_CONDUCT.md)
 - [Get in touch](https://www.juanvillela.dev)
