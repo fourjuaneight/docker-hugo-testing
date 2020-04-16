@@ -57,9 +57,10 @@ RUN TAG_LATEST_URL="$(curl -LsI -o /dev/null -w %{url_effective} https://github.
   && chmod +x /usr/local/bin/hugo \
   && hugo version
 
-# Config
+# Chrome setup
+RUN chmod 755 /usr/lib/chromium
 ENV CHROME_BIN=/usr/bin/chromium-browser \
-  CHROME_PATH=/usr/lib/chromium/ \
+  CHROME_PATH=/usr/lib/chromium \
   LIGHTHOUSE_CHROMIUM_PATH=/usr/bin/chromium-browser
 
 # Autorun chrome headless with no GPU
