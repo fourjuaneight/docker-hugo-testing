@@ -1,5 +1,5 @@
 # Use Alpine Linux as our base image so that we minimize the overall size our final container, and minimize the surface area of packages that could be out of date.
-FROM node:12.6.0-alpine as hugo
+FROM node:12.6.0-alpine
 
 LABEL description="Docker container for building websites with the Hugo static site generator and PostCSS."
 LABEL maintainer="Juan Villela <https://www.juanvillela.dev>"
@@ -22,8 +22,6 @@ RUN echo "http://dl-cdn.alpinelinux.org/alpine/edge/main" > /etc/apk/repositorie
   git \
   harfbuzz \
   libstdc++ \
-  nodejs-lts \
-  npm \
   nss \
   openssh-client \
   ttf-freefont \
@@ -53,10 +51,6 @@ RUN TAG_LATEST_URL="$(curl -LsI -o /dev/null -w %{url_effective} https://github.
   && hugo version
 
 RUN hugo version
-
-FROM node:12.6.0-alpine
-
-COPY --from=hugo /usr/local/bin/hugo /usr/local/bin/hugo
 
 # Install npm dependencies
 COPY package*.json ./
